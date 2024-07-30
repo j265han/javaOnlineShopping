@@ -9,12 +9,16 @@ import org.example.utils.Md5Utils;
 import org.example.utils.ThreadUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
+
 
 @RestController
 @RequestMapping("/user")
@@ -22,6 +26,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @RequestMapping("/register")
     public RespCodePo register(@RequestBody UserReq userReq) {
@@ -63,6 +70,7 @@ public class UserController {
             claims.put("id", loginUser.getId());
             claims.put("username", loginUser.getUsername());
             String token = JwtUtils.generateToken(claims);
+            stringRedisTemplate.opsForValue().set(token, token, 1, TimeUnit.DAYS);
             return RespCodePo.success(token);
         } else {
             return RespCodePo.error("Wrong Password");
@@ -70,7 +78,7 @@ public class UserController {
     }
 
     @PatchMapping("/updatePwd")
-    public RespCodePo<UserPo> updatePwd(@RequestBody Map<String, String> params) {
+    public RespCodePo<UserPo> updatePwd(@RequestBody Map<String, String> params, @RequestHeader("Authorization") String token) {
         String oldPwd = params.get("oldPwd");
         String newPwd = params.get("newPwd");
         String rePwd = params.get("rePwd");
@@ -93,6 +101,7 @@ public class UserController {
         }
 
         userService.updatePwd(newPwd);
+        stringRedisTemplate.opsForValue().getOperations().delete(token);
         return RespCodePo.success(user);
     }
 
