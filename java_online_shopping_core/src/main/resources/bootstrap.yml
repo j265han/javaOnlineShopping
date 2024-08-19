@@ -2,14 +2,23 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/online_shopping
-    username: root
+    url: jdbc:mysql://35.200.56.35:3306/online_shopping
+    username: hyj
     password: Hh-13426420691
   data:
     redis:
-      host: localhost
+      host: 35.200.56.35
       port: 6379
 
+
+
+  application:
+    admin:
+      enabled: false
+logging:
+  level:
+    org:
+      springframework=DEBUG:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

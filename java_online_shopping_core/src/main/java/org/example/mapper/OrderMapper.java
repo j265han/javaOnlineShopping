@@ -14,14 +14,20 @@ import java.util.List;
 @Mapper
 public interface OrderMapper extends BaseMapper<OrderPo> {
 
-    @Delete("DELETE FROM orders a WHERE a.order_id = #{orderId}")
+    @Delete("DELETE FROM orders WHERE order_id = #{orderId}")
     void deleteByOrderId(String orderId);
 
     @Select("select a.status, b.* from orders a join shopping b on a.order_id=b.order_id where a.order_id = #{orderId}")
     OrderResp getOrderDetail(String orderId);
 
+    @Select("select a.status, a.order_id, b.* from orders a join shopping b on a.order_id = b.order_id where a.user_id = #{userId} order by a.created_time desc")
+    List<OrderResp> getAllOrderDetail(String userId);
+
     @Select("select  c.* from order_item c where c.order_id = #{orderId}")
     List<OrderItemPo> getItemsDetail(String orderId);
+
+    @Select("select  c.* from order_item c where c.user_id = #{userId}")
+    List<OrderItemPo> getAllItemsDetail(String userId);
 
     @Select("select a.order_id from orders a where a.user_id = #{userId}")
     List<String> getOrderIds(String userId);

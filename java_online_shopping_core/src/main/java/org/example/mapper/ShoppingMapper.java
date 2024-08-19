@@ -8,6 +8,6 @@ import org.example.po.ShoppingPo;
 @Mapper
 public interface ShoppingMapper extends BaseMapper<ShoppingPo> {
 
-    @Delete("DELETE FROM shopping a WHERE a.order_id = #{orderId}")
+    @Delete("DELETE FROM shopping WHERE order_id = #{orderId}")
     void deleteByOrderId(String orderId);
 }

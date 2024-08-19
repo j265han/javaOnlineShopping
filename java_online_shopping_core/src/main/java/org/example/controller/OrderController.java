@@ -30,16 +30,24 @@ public class OrderController {
         return RespCodePo.success(orderResp);
     }
 
+//    @GetMapping("/list")
+//    public RespCodePo list(@RequestParam String userId) {
+//        List<String> orderIds = orderService.getOrderIds(userId);
+//        List<List<OrderResp>> orderResps = new ArrayList<>();
+//        orderIds.forEach(s -> {
+//            OrderResp orderResp =  orderService.getOrderDetail(s);
+//            orderResps.add(Collections.singletonList(orderResp));
+//        });
+////
+//        return RespCodePo.success(orderResps);
+//    }
+
     @GetMapping("/list")
     public RespCodePo list(@RequestParam String userId) {
-        List<String> orderIds = orderService.getOrderIds(userId);
-        List<List<OrderResp>> orderResps = new ArrayList<>();
-        orderIds.forEach(s -> {
-            OrderResp orderResp =  orderService.getOrderDetail(s);
-            orderResps.add(Collections.singletonList(orderResp));
-        });
-//
-        return RespCodePo.success(orderResps);
+//        List<List<OrderResp>> orderResps = new ArrayList<>();
+        List<List<OrderResp>> orderResp = orderService.getOrderDetailNew(userId);
+//        orderResps.add(orderResp);
+        return RespCodePo.success(orderResp);
     }
 
     @PostMapping("/build")

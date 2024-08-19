@@ -17,7 +17,10 @@ public interface OrderService {
 
     OrderResp getOrderDetail(String orderId);
 
+    List<List<OrderResp>> getOrderDetailNew(String userId);
+
     List<String> getOrderIds(String userId);
 
     void deleteOrder(String orderId);
+
 }

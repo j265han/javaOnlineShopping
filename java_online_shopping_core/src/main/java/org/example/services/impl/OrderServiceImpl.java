@@ -1,6 +1,7 @@
 package org.example.services.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.OrderItemDto;
 import org.example.mapper.*;
 import org.example.po.*;
@@ -13,10 +14,12 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -54,7 +57,7 @@ public class OrderServiceImpl implements OrderService {
             orderItemMapper.insert(orderItemPo);
             orderItemMapper.insertInfo(s);
             orderItemMapper.updateTotal(userId, s);
-
+            orderItemMapper.updateStock(s);
         });
 
         ShoppingPo shoppingPo = ShoppingPo.builder()
@@ -71,9 +74,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResp getOrderDetail(String orderId) {
 
         List<OrderItemPo> orderItemPos = orderMapper.getItemsDetail(orderId);
-
         OrderResp orderResp = orderMapper.getOrderDetail(orderId);
-
         List<Integer> goodsId = orderItemPos.stream().map(OrderItemPo::getGoodId).collect(Collectors.toList());
         List<SpecPo> specPoList = singleMapper.search_spec(goodsId);
         Map<Integer, List<SpecPo>> specPoMap = specPoList.stream().collect(Collectors.groupingBy(SpecPo::getGoodsId));
@@ -85,8 +86,44 @@ public class OrderServiceImpl implements OrderService {
             dtoList.add(dto);
         });
 
-        orderResp.setItemsDetails(dtoList);
+        if (orderResp == null) {
+            orderItemMapper.deleteByOrderId(orderId);
+            orderMapper.deleteById(orderId);
+        } else {
+            orderResp.setItemsDetails(dtoList);
+
+        }
         return orderResp;
+    }
+
+    @Override
+    public List<List<OrderResp>> getOrderDetailNew(String userId) {
+
+        List<OrderItemPo> orderItemPos = orderMapper.getAllItemsDetail(userId);
+        List<OrderResp> orderResps = orderMapper.getAllOrderDetail(userId);
+        List<Integer> goodsId = orderItemPos.stream().map(OrderItemPo::getGoodId).collect(Collectors.toList());
+        List<SpecPo> specPoList = singleMapper.search_spec(goodsId);
+        Map<Integer, List<SpecPo>> specPoMap = specPoList.stream().collect(Collectors.groupingBy(SpecPo::getGoodsId));
+
+        List<OrderItemDto> dtoList = new ArrayList<>();
+        orderItemPos.forEach(singlePo -> {
+            OrderItemDto dto = CopyUtils.copyAndObtain(singlePo, OrderItemDto.class);
+            dto.setSpecList(specPoMap.get(singlePo.getGoodId()));
+            dtoList.add(dto);
+        });
+        Map<String, List<OrderItemDto>> orderItemMap = dtoList.stream().collect(Collectors.groupingBy(OrderItemDto::getOrderId));
+
+        List<List<OrderResp>> ordersList = new ArrayList<>();
+        orderResps.forEach(s -> {
+
+            s.setItemsDetails(orderItemMap.get(s.getOrderId()));
+
+            ordersList.add(Collections.singletonList(s));
+        });
+
+
+
+        return ordersList;
     }
 
     @Override
@@ -123,10 +160,12 @@ public class OrderServiceImpl implements OrderService {
 //                                            .totalPrice(orderReq.getCurrentUnitPrice().multiply(quantity))
                                             .build();
         OrderPo orderPo = OrderPo.builder().orderId(orderReq.getOrderId()).userId(orderReq.getUserId()).build();
+
         orderMapper.insert(orderPo);
         orderItemMapper.insert(orderItemPo);
         orderItemMapper.insertInfoDirect(orderReq.getGoodId().get(0), orderReq.getQuantity());
         orderItemMapper.updateTotal(orderReq.getUserId(), orderReq.getGoodId().get(0));
+        orderItemMapper.updateStockDirect(orderReq.getQuantity(), orderReq.getGoodId().get(0));
         ShoppingPo shoppingPo = ShoppingPo.builder()
                 .userId(orderReq.getUserId())
                 .orderId(orderReq.getOrderId())
