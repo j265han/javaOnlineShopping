@@ -55,9 +55,9 @@ public class OrderServiceImpl implements OrderService {
             OrderItemPo orderItemPo = OrderItemPo.builder().userId(userId).orderId(orderId).goodId(s).build();
 
             orderItemMapper.insert(orderItemPo);
-            orderItemMapper.insertInfo(s);
+            orderItemMapper.insertInfo(s, userId);
             orderItemMapper.updateTotal(userId, s);
-            orderItemMapper.updateStock(s);
+            orderItemMapper.updateStock(s, userId);
         });
 
         ShoppingPo shoppingPo = ShoppingPo.builder()
@@ -102,6 +102,9 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItemPo> orderItemPos = orderMapper.getAllItemsDetail(userId);
         List<OrderResp> orderResps = orderMapper.getAllOrderDetail(userId);
         List<Integer> goodsId = orderItemPos.stream().map(OrderItemPo::getGoodId).collect(Collectors.toList());
+        if (goodsId.isEmpty()) {
+            return Collections.emptyList();
+        }
         List<SpecPo> specPoList = singleMapper.search_spec(goodsId);
         Map<Integer, List<SpecPo>> specPoMap = specPoList.stream().collect(Collectors.groupingBy(SpecPo::getGoodsId));
 

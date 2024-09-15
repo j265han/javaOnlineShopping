@@ -14,9 +14,9 @@ public interface OrderItemMapper extends BaseMapper<OrderItemPo> {
     @Update("UPDATE order_item a set a.good_name = (select name from sh_goods where sh_goods.id = #{goodId})," +
             " a.good_image = (select picture from sh_goods where sh_goods.id = #{goodId}), " +
             "a.current_unit_price = (select price from sh_goods where sh_goods.id = #{goodId}), " +
-            "a.quantity = (select quantity from cart where cart.good_id = #{goodId}) " +
-            "where a.good_id = #{goodId}")
-    void insertInfo(Integer goodId);
+            "a.quantity = (select quantity from cart where cart.good_id = #{goodId} and cart.user_id = #{userId}) " +
+            "where a.good_id = #{goodId} ")
+    void insertInfo(Integer goodId, String userId);
 
     @Update("UPDATE order_item a set a.good_name = (select name from sh_goods where sh_goods.id = #{goodId})," +
             " a.good_image = (select picture from sh_goods where sh_goods.id = #{goodId}), " +
@@ -24,8 +24,8 @@ public interface OrderItemMapper extends BaseMapper<OrderItemPo> {
             "a.quantity = #{quantity} ")
     void insertInfoDirect(Integer goodId, Integer quantity);
 
-    @Update("UPDATE sh_goods a set a.stock = a.stock - (select quantity from cart where cart.good_id = #{goodId}) where a.id = #{goodId}")
-    void updateStock(Integer goodId);
+    @Update("UPDATE sh_goods a set a.stock = a.stock - (select quantity from cart where cart.good_id = #{goodId} and cart.user_id = #{userId}) where a.id = #{goodId}")
+    void updateStock(Integer goodId, String userId);
 
     @Update("UPDATE sh_goods a set a.stock = a.stock - #{quantity} where a.id = #{goodId}")
     void updateStockDirect(Integer quantity, Integer goodId);
